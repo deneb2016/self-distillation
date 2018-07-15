@@ -11,13 +11,13 @@ import os
 import sys
 import time
 import argparse
-
+import numpy as np
 from model.resnet import ResNet
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR')
 
 parser.add_argument('--bs', default=128, type=int, help='batch size')
-parser.add_argument('--num_epochs', default=200, type=int, help='number of epochs')
+parser.add_argument('--num_epochs', default=300, type=int, help='number of epochs')
 parser.add_argument('--lr', default=0.1, type=float, help='learning_rate')
 parser.add_argument('--net', default='resnet34', type=str, help='model')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset = [cifar10/cifar100]')
@@ -28,20 +28,25 @@ parser.add_argument('--distill', type=float, default=0, metavar='M', help='facto
 parser.add_argument('--temp', type=float, default=1, metavar='M', help='temperature for distillation (default: 7)')
 
 # set training session
-parser.add_argument('--s', dest='session', help='training session', default=0, type=int)
 parser.add_argument('--seed', help='pytorch random seed', default=1, type=int)
-parser.add_argument('--save_dir', help='directory to save models', default="../repo/distill/cifar10/resnet34/run1/")
+parser.add_argument('--save_dir', help='directory to save models')
 
 
 args = parser.parse_args()
 best_acc = 0
+np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 if torch.cuda.is_available():
     device = torch.device('cuda')
     torch.cuda.manual_seed(args.seed)
 else:
     device = torch.device('cpu')
-log_file_name = os.path.join(args.save_dir, 'log_{}_{}.txt'.format(args.net, args.session))
+
+if args.stoch_depth == 1:
+    model_name = '{}_{}_s1_without_sd_seed{}'.format(args.net, args.dataset, args.seed)
+else:
+    model_name = '{}_{}_s1_t{}_d{}_seed{}'.format(args.net, args.dataset, args.temp, args.distill, args.seed)
+log_file_name = os.path.join(args.save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
 
@@ -53,8 +58,8 @@ def train(net, dataloader, optimizer, epoch):
     correct = 0
     total = 0
 
-    print('\n=> Training Epoch #%d, lr=%.4f' %(epoch, cf.learning_rate(args.lr, epoch)))
-    log_file.write('\n=> Training Epoch #%d, lr=%.4f\n' %(epoch, cf.learning_rate(args.lr, epoch)))
+    print('\n=> [%s] Training Epoch #%d, lr=%.4f' %(model_name, epoch, cf.learning_rate(args.lr, epoch)))
+    log_file.write('\n=> [%s] Training Epoch #%d, lr=%.4f\n' %(model_name, epoch, cf.learning_rate(args.lr, epoch)))
     for batch_idx, (inputs, targets) in enumerate(dataloader):
         inputs = inputs.to(device)
         targets = targets.to(device)
@@ -120,10 +125,10 @@ def test(net, dataloader, epoch):
     if acc > best_acc:
         print('| Saving Best model...\t\t\tTop1 = %.2f%%' %(acc))
         log_file.write('| Saving Best model...\t\t\tTop1 = %.2f%%\n' %(acc))
-        save_name = os.path.join(args.save_dir, '{}_{}_{}.pth'.format(args.net, args.session, args.seed))
+        save_name = os.path.join(args.save_dir, '{}.pth'.format(model_name))
         checkpoint = dict()
         checkpoint['model'] = net.state_dict()
-        checkpoint['session'] = args.session
+        checkpoint['model_name'] = model_name
         checkpoint['seed'] = args.seed
         checkpoint['epoch'] = epoch
         torch.save(checkpoint, save_name)
@@ -204,3 +209,4 @@ if __name__ == '__main__':
 
     print('\n[Phase 4] : Testing model')
     print('* Test results : Acc@1 = %.2f%%' %(best_acc))
+    log_file.write('* Test results : Acc@1 = %.2f%%\n' %(best_acc))
