@@ -17,7 +17,7 @@ from model.resnet import ResNet
 parser = argparse.ArgumentParser(description='PyTorch CIFAR')
 
 parser.add_argument('--bs', default=128, type=int, help='batch size')
-parser.add_argument('--num_epochs', default=300, type=int, help='number of epochs')
+parser.add_argument('--num_epochs', default=200, type=int, help='number of epochs')
 parser.add_argument('--lr', default=0.1, type=float, help='learning_rate')
 parser.add_argument('--net', default='resnet34', type=str, help='model')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset = [cifar10/cifar100]')
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     print('| Training Epochs = ' + str(args.num_epochs))
     print('| Initial Learning Rate = ' + str(args.lr))
 
-    optimizer = optim.SGD(net.parameters(), lr=cf.learning_rate(args.lr, 1), momentum=0.9, weight_decay=1e-4, nesterov=True)
+    optimizer = optim.SGD(net.parameters(), lr=cf.learning_rate(args.lr, 1), momentum=0.9, weight_decay=1e-4)
 
     elapsed_time = 0
     for epoch in range(1, args.num_epochs + 1):

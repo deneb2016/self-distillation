@@ -16,9 +16,9 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship'
 
 def learning_rate(init, epoch):
     optim_factor = 0
-    if(epoch > 225):
+    if(epoch > 150):
         optim_factor = 2
-    elif(epoch > 150):
+    elif(epoch > 100):
         optim_factor = 1
 
     return init*math.pow(0.1, optim_factor)
