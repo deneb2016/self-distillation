@@ -12,6 +12,7 @@ import sys
 import time
 import argparse
 import numpy as np
+import math
 from model.resnet import ResNet
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR')
@@ -89,6 +90,11 @@ def train(net, dataloader, optimizer, epoch):
         _, predicted = torch.max(outputs.detach(), 1)
         total += targets.size(0)
         correct += predicted.eq(targets.detach()).long().sum().item()
+
+        if math.isnan(loss.item()):
+            print('@@@@@@@nan@@@@@@@@@@@@')
+            log_file.write('@@@@@@@@@@@nan @@@@@@@@@@@@@\n')
+            sys.exit(0)
 
         sys.stdout.write('\r')
         sys.stdout.write('| Epoch [%3d/%3d] Iter[%3d/%3d]\t\tLoss: %.4f Acc@1: %.3f%%'
