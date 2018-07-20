@@ -22,7 +22,7 @@ GPU = 1
 dataset = 'cifar100'
 FROM = ['11', '151']
 D = ['1', '0.2', '0.04']
-seed = 1
+seed = 2
 save_dir = '../repo/distill/%s/resnet34sd/session2/' % dataset
 
 for df in FROM:
