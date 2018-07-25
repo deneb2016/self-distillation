@@ -1,3 +1,0 @@
-Namespace(bs=256, conv=5, dataset='cifar100', distill=0, distill_from=1, drop_last_only=False, drop_p=0, feat_dim=4096, lr=0.1, net='vgg16', num_epochs=200, save_dir='.', seed=1, temp=1)
-
-=> [vgg16_cifar100_s4_dp0_fd4096_cv5_dlo0_seed1] Training Epoch #1, lr=0.1000

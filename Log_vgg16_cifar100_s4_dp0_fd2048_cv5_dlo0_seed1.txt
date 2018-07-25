@@ -1,9 +1,0 @@
-Namespace(bs=256, conv=5, dataset='cifar100', distill=0, distill_from=1, drop_last_only=False, drop_p=0, feat_dim=2048, lr=0.1, net='vgg16', num_epochs=200, save_dir='.', seed=1, temp=1)
-
-=> [vgg16_cifar100_s4_dp0_fd2048_cv5_dlo0_seed1] Training Epoch #1, lr=0.1000
-| Epoch [  1/200] 		Loss: 4.4325 Acc@1: 1.112%
-| Validation Epoch #1			Loss: 4.4244 Acc@1: 1.95%
-| Saving Best model...			Top1 = 1.95%
-| Elapsed time : 0:00:15
-
-=> [vgg16_cifar100_s4_dp0_fd2048_cv5_dlo0_seed1] Training Epoch #2, lr=0.1000
