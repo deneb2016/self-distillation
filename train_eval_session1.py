@@ -55,7 +55,9 @@ log_file = open(log_file_name, 'w')
 def train(net, dataloader, optimizer, epoch):
     criterion = nn.CrossEntropyLoss()
     net.train()
-    train_loss = 0
+    hard_loss_sum = 0
+    soft_loss_sum = 0
+    loss_sum = 0
     correct = 0
     total = 0
 
@@ -74,19 +76,23 @@ def train(net, dataloader, optimizer, epoch):
         optimizer.zero_grad()
         outputs = net(inputs)               # Forward Propagation
         loss = criterion(outputs, targets)  # Loss
+        hard_loss_sum = hard_loss_sum + loss.item() * targets.size(0)
 
         # compute distillation loss
         if epoch >= args.distill_from and args.distill > 0:
             heat_output = outputs / args.temp
             heat_soft_target = soft_target / args.temp
 
-            distill_loss = F.kl_div(F.log_softmax(heat_output, 1), F.softmax(heat_soft_target), size_average=False) / targets.size(0) * (args.temp*args.temp)
+            distill_loss = F.kl_div(F.log_softmax(heat_output, 1), F.softmax(heat_soft_target), size_average=False) / targets.size(0)
+            soft_loss_sum = soft_loss_sum + distill_loss.item() * targets.size(0)
+
+            distill_loss = distill_loss * (args.temp*args.temp)
             loss = loss + args.distill * distill_loss
 
         loss.backward()  # Backward Propagation
         optimizer.step() # Optimizer update
 
-        train_loss += loss.item()
+        loss_sum = loss_sum + loss.item() * targets.size(0)
         _, predicted = torch.max(outputs.detach(), 1)
         total += targets.size(0)
         correct += predicted.eq(targets.detach()).long().sum().item()
@@ -97,12 +103,12 @@ def train(net, dataloader, optimizer, epoch):
             sys.exit(0)
 
         sys.stdout.write('\r')
-        sys.stdout.write('| Epoch [%3d/%3d] Iter[%3d/%3d]\t\tLoss: %.4f Acc@1: %.3f%%'
+        sys.stdout.write('| Epoch [%3d/%3d] Iter[%3d/%3d]\t\tLoss: %.4f Acc@1: %.2f%% Hard: %.4f Soft: %.4f'
                 %(epoch, args.num_epochs, batch_idx+1,
-                    (len(trainset)//args.bs)+1, loss.item(), 100.*correct/total))
+                    (len(trainset)//args.bs)+1, loss_sum/total, 100.*correct/total, hard_loss_sum/total, soft_loss_sum/total))
         sys.stdout.flush()
-    log_file.write('| Epoch [%3d/%3d] \t\tLoss: %.4f Acc@1: %.3f%%'
-                     % (epoch, args.num_epochs, loss.item(), 100. * correct / total))
+    log_file.write('| Epoch [%3d/%3d] \t\tLoss: %.4f Acc@1: %.2f%% Hard: %.4f Soft: %.4f'
+                     % (epoch, args.num_epochs, loss_sum/ total, 100. * correct / total, hard_loss_sum/total, soft_loss_sum/total))
 
 
 def test(net, dataloader, epoch):
@@ -143,29 +149,29 @@ def test(net, dataloader, epoch):
         best_acc = acc
 
 
-def test_trainset(net, dataloader, epoch):
-    criterion = nn.CrossEntropyLoss()
-    net.eval()
-    test_loss = 0
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(dataloader):
-            inputs = inputs.to(device)
-            targets = targets.to(device)
-            outputs = net(inputs)
-            loss = criterion(outputs, targets)
-
-            test_loss += loss.item() * targets.size(0)
-            _, predicted = torch.max(outputs.data, 1)
-            total += targets.size(0)
-            correct += predicted.eq(targets.data).long().sum().item()
-
-    # Save checkpoint when best model
-    acc = 100.*correct/total
-    test_loss = test_loss / total
-    print("\n| Evaluation Trainset Epoch #%d\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc), end='')
-    log_file.write("\n| Evaluation Trainset Epoch #%d\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc))
+# def test_trainset(net, dataloader, epoch):
+#     criterion = nn.CrossEntropyLoss()
+#     net.eval()
+#     test_loss = 0
+#     correct = 0
+#     total = 0
+#     with torch.no_grad():
+#         for batch_idx, (inputs, targets) in enumerate(dataloader):
+#             inputs = inputs.to(device)
+#             targets = targets.to(device)
+#             outputs = net(inputs)
+#             loss = criterion(outputs, targets)
+#
+#             test_loss += loss.item() * targets.size(0)
+#             _, predicted = torch.max(outputs.data, 1)
+#             total += targets.size(0)
+#             correct += predicted.eq(targets.data).long().sum().item()
+#
+#     # Save checkpoint when best model
+#     acc = 100.*correct/total
+#     test_loss = test_loss / total
+#     print("\n| Evaluation Trainset Epoch #%d\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc), end='')
+#     log_file.write("\n| Evaluation Trainset Epoch #%d\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc))
 
 
 def set_learning_rate(optimizer, lr):
@@ -232,7 +238,6 @@ if __name__ == '__main__':
         start_time = time.time()
         set_learning_rate(optimizer, cf.learning_rate(args.lr, epoch))
         train(net, trainloader, optimizer, epoch)
-        test_trainset(net, trainloader, epoch)
         test(net, testloader, epoch)
 
         epoch_time = time.time() - start_time
