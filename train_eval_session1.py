@@ -103,7 +103,7 @@ def train(net, dataloader, optimizer, epoch):
             sys.exit(0)
 
         sys.stdout.write('\r')
-        sys.stdout.write('| Epoch [%3d/%3d] Iter[%3d/%3d]\t\tLoss: %.4f Acc@1: %.2f%% Hard: %.4f Soft: %.4f'
+        sys.stdout.write('| Epoch [%3d/%3d] Iter[%3d/%3d]\t\tLoss: %.4g Acc@1: %.2f%% Hard: %.4g Soft: %.4g'
                 %(epoch, args.num_epochs, batch_idx+1,
                     (len(trainset)//args.bs)+1, loss_sum/total, 100.*correct/total, hard_loss_sum/total, soft_loss_sum/total))
         sys.stdout.flush()
