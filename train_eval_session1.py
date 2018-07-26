@@ -104,6 +104,7 @@ def train(net, dataloader, optimizer, epoch):
     log_file.write('| Epoch [%3d/%3d] \t\tLoss: %.4f Acc@1: %.3f%%'
                      % (epoch, args.num_epochs, loss.item(), 100. * correct / total))
 
+
 def test(net, dataloader, epoch):
     global best_acc
     criterion = nn.CrossEntropyLoss()
@@ -118,15 +119,16 @@ def test(net, dataloader, epoch):
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
-            test_loss += loss.item()
+            test_loss += loss.item() * targets.size(0)
             _, predicted = torch.max(outputs.data, 1)
             total += targets.size(0)
             correct += predicted.eq(targets.data).long().sum().item()
 
     # Save checkpoint when best model
     acc = 100.*correct/total
-    print("\n| Validation Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, loss.item(), acc))
-    log_file.write("\n| Validation Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%%\n" %(epoch, loss.item(), acc))
+    test_loss = test_loss / total
+    print("\n| Validation Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc))
+    log_file.write("\n| Validation Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%%\n" %(epoch, test_loss, acc))
 
     if acc > best_acc:
         print('| Saving Best model...\t\t\tTop1 = %.2f%%' %(acc))
@@ -139,6 +141,31 @@ def test(net, dataloader, epoch):
         checkpoint['epoch'] = epoch
         torch.save(checkpoint, save_name)
         best_acc = acc
+
+
+def test_trainset(net, dataloader, epoch):
+    criterion = nn.CrossEntropyLoss()
+    net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(dataloader):
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+
+            test_loss += loss.item() * targets.size(0)
+            _, predicted = torch.max(outputs.data, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).long().sum().item()
+
+    # Save checkpoint when best model
+    acc = 100.*correct/total
+    test_loss = test_loss / total
+    print("\n| Evaluation Trainset Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc))
+    log_file.write("\n| Evaluation Trainset Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%%\n" %(epoch, test_loss, acc))
 
 
 def set_learning_rate(optimizer, lr):
@@ -178,7 +205,7 @@ if __name__ == '__main__':
         num_classes = 100
 
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=2)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=2)
 
 
     # Model
@@ -205,6 +232,7 @@ if __name__ == '__main__':
         start_time = time.time()
         set_learning_rate(optimizer, cf.learning_rate(args.lr, epoch))
         train(net, trainloader, optimizer, epoch)
+        test_trainset(net, trainloader, epoch)
         test(net, testloader, epoch)
 
         epoch_time = time.time() - start_time
