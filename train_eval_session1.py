@@ -164,8 +164,8 @@ def test_trainset(net, dataloader, epoch):
     # Save checkpoint when best model
     acc = 100.*correct/total
     test_loss = test_loss / total
-    print("\n| Evaluation Trainset Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc), end='')
-    log_file.write("\n| Evaluation Trainset Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc))
+    print("\n| Evaluation Trainset Epoch #%d\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc), end='')
+    log_file.write("\n| Evaluation Trainset Epoch #%d\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc))
 
 
 def set_learning_rate(optimizer, lr):
