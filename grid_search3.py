@@ -46,3 +46,5 @@ for t in T:
     for d in D:
         cmd = 'CUDA_VISIBLE_DEVICES=%d python train_eval_session1.py --seed %d --dataset %s --save_dir %s --stoch_depth 0.5 --temp %s --distill %s' % (GPU, seed, dataset, save_dir, t, d)
         os.system(cmd)
+
+

@@ -1,4 +1,4 @@
-# session1 CIFIAR100 part4 seed4
+# session1 CIFIAR100 part4 seed5
 
 import os
 
