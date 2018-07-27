@@ -2,9 +2,9 @@ import os
 
 GPU = 1
 dataset = 'cifar100'
-T = ['9']
+T = ['11']
 D = ['0.1', '0.02', '0.004', '0.5']
-seed = 2
+seed = 3
 save_dir = '../repo/distill/%s/resnet34sd/session3/' % dataset
 
 for t in T:

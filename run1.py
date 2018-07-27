@@ -1,9 +1,9 @@
 import os
 
 GPU = 0
-dataset = 'cifar100'
-FEAT_DIM = ['2048', '4096']
-DROP_P = ['0', '0.5', '0.3']
+dataset = 'cifar10'
+FEAT_DIM = ['4096']
+DROP_P = ['0.3']
 
 seed = 1
 save_dir = '../repo/distill/%s/resnet34sd/session4/' % dataset

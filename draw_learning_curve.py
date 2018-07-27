@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 
-fname = '/home/seungkwan/Log_resnet34_cifar100_s1_t13.0_d0.04_seed2.txt'
+fname = '/home/seungkwan/Log_vgg16_cifar100_s4_dp0.0_fd4096_cv5_dlo0_seed1.txt'
 f = open(fname, 'r')
 lines = f.readlines()
 X = [i for i in range(1, 301)]
