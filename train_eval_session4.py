@@ -16,15 +16,14 @@ import math
 from model.vggnet import VGGNet
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR')
-
 parser.add_argument('--bs', default=128, type=int, help='batch size')
-parser.add_argument('--num_epochs', default=200, type=int, help='number of epochs')
+parser.add_argument('--num_epochs', default=300, type=int, help='number of epochs')
 parser.add_argument('--lr', default=0.1, type=float, help='learning_rate')
 parser.add_argument('--net', default='vgg16', type=str, help='model')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset = [cifar10/cifar100]')
 
 parser.add_argument('--drop_p', default=0, type=float, help='dropout prob, off if 0')
-parser.add_argument('--feat_dim', default=1024, type=int, help='dimension of feature vector')
+parser.add_argument('--feat_dim', default=4096, type=int, help='dimension of feature vector')
 parser.add_argument('--drop_last_only', action='store_true')
 parser.add_argument('--conv', default=5, type=int, help='number of conv layers, 4 or 5')
 
@@ -34,10 +33,10 @@ parser.add_argument('--temp', type=float, default=1, metavar='M', help='temperat
 
 # set training session
 parser.add_argument('--seed', help='pytorch random seed', default=1, type=int)
-parser.add_argument('--save_dir', help='directory to save models')
 
 
 args = parser.parse_args()
+save_dir = os.path.join('../repo/distill', args.dataset, 'vgg16do', 'session4')
 best_acc = 0
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
@@ -48,7 +47,7 @@ else:
     device = torch.device('cpu')
 
 model_name = '{}_{}_s4_dp{}_fd{}_cv{}_dlo{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.conv, 1 if args.drop_last_only else 0, args.seed)
-log_file_name = os.path.join(args.save_dir, 'Log_{}.txt'.format(model_name))
+log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
 
@@ -140,7 +139,7 @@ def test(net, dataloader, epoch):
     if acc > best_acc:
         print('| Saving Best model...\t\t\tTop1 = %.2f%%' %(acc))
         log_file.write('| Saving Best model...\t\t\tTop1 = %.2f%%\n' %(acc))
-        save_name = os.path.join(args.save_dir, '{}.pth'.format(model_name))
+        save_name = os.path.join(save_dir, '{}.pth'.format(model_name))
         checkpoint = dict()
         checkpoint['model'] = net.state_dict()
         checkpoint['model_name'] = model_name
