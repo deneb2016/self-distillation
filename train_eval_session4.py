@@ -47,7 +47,7 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
-model_name = '{}_{}_s4_dp{}_fd{}_cv{}_dlo{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.conv, 1 if args.drop_last_only else 0, args.seed)
+model_name = '{}_{}_s4_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
 log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
