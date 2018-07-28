@@ -1,27 +1,9 @@
- # import os
-#
-# GPU = 0
-# dataset = 'cifar100'
-# T = ['1', '9']
-# D = ['1', '0.2', '0.04', '0.008']
-# seed = 4
-# save_dir = '../repo/distill/%s/resnet34sd/session1/' % dataset
-#
-# for t in T:
-#     for d in D:
-#         cmd = 'CUDA_VISIBLE_DEVICES=%d python train_eval_session1.py --seed %d --dataset %s --save_dir %s --stoch_depth 0.5 --temp %s --distill %s' % (GPU, seed, dataset, save_dir, t, d)
-#         os.system(cmd)
-
 import os
 
 GPU = 0
-dataset = 'cifar100'
-T = ['1']
-D = ['0.1', '0.02', '0.004', '0.5']
-seed = 2
-save_dir = '../repo/distill/%s/resnet34sd/session3/' % dataset
-
-for t in T:
-    for d in D:
-        cmd = 'CUDA_VISIBLE_DEVICES=%d python train_eval_session3.py --seed %d --dataset %s --save_dir %s --stoch_depth 0.5 --temp %s --distill %s' % (GPU, seed, dataset, save_dir, t, d)
-        os.system(cmd)
+dataset = 'cifar10'
+SEED = [1, 2, 3, 4, 5]
+save_dir = '../repo/distill/%s/vgg16do/session4/' % dataset
+for seed in SEED:
+    cmd = 'CUDA_VISIBLE_DEVICES=%d python train_eval_session4.py --seed %d --dataset %s --save_dir %s --drop_p 0 --feat_dim 2048 --wd 0.0001' % (GPU, seed, dataset, save_dir)
+    os.system(cmd)
