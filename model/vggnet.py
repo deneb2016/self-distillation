@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import math
 
+import torchvision.models
+
 
 def make_layers(cfg, batch_norm=False):
     layers = []
