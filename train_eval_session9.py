@@ -1,4 +1,4 @@
-# dropout을 last에만 넣었을 때, 새팅 찾기
+# session9 conv4까지만 썼을 때 새팅 찾기
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -25,7 +25,7 @@ parser.add_argument('--dataset', default='cifar10', type=str, help='dataset = [c
 
 parser.add_argument('--drop_p', default=0.5, type=float, help='dropout prob, off if 0')
 parser.add_argument('--feat_dim', default=2048, type=int, help='dimension of feature vector')
-parser.add_argument('--conv', default=5, type=int, help='number of conv layers, 4 or 5')
+parser.add_argument('--conv', default=4, type=int, help='number of conv layers, 4 or 5')
 
 parser.add_argument('--distill_from', default=1, type=int, help='epoch to start distillation')
 parser.add_argument('--distill', type=float, default=0, metavar='M', help='factor of distill loss (default: 0.1, off if <=0)')
@@ -49,7 +49,7 @@ else:
     device = torch.device('cpu')
 
 
-model_name = '{}_{}_s8_fd{}_seed{}'.format(args.net, args.dataset, args.feat_dim, args.seed)
+model_name = '{}_{}_s8_fd{}_conv{}_seed{}'.format(args.net, args.dataset, args.feat_dim, args.conv, args.seed)
 log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
