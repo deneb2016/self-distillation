@@ -36,7 +36,7 @@ parser.add_argument('--seed', help='pytorch random seed', default=1, type=int)
 
 
 args = parser.parse_args()
-save_dir = os.path.join('../repo/distill', args.dataset, 'vgg16do', 'session8')
+save_dir = os.path.join('../repo/distill', args.dataset, 'vgg16do', 'session9')
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 best_acc = 0
@@ -49,7 +49,7 @@ else:
     device = torch.device('cpu')
 
 
-model_name = '{}_{}_s8_fd{}_conv{}_seed{}'.format(args.net, args.dataset, args.feat_dim, args.conv, args.seed)
+model_name = '{}_{}_s9_dp{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.seed)
 log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     print('\n[Phase 2] : Model setup')
     print('| Building net type [' + args.net + ']...')
     if args.net == 'vgg16':
-        net = VGGNet(num_classes, args.drop_p, True, args.feat_dim, args.conv == 5)
+        net = VGGNet(num_classes, args.drop_p, False, args.feat_dim, args.conv == 5)
     else:
         print('Error : Network should be either [ResNet34]')
         sys.exit(0)
