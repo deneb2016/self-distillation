@@ -202,7 +202,7 @@ if __name__ == '__main__':
     print('| Training Epochs = ' + str(args.num_epochs))
     print('| Initial Learning Rate = ' + str(args.lr))
 
-    optimizer = optim.SGD(net.parameters(), lr=cf.learning_rate(args.lr, 1), momentum=0.9, weight_decay=args.wd)
+    optimizer = optim.SGD(net.parameters(), lr=cf.learning_rate(args.lr, 1), momentum=0.9, weight_decay=1e-4)
 
     elapsed_time = 0
     for epoch in range(1, args.num_epochs + 1):
