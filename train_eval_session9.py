@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-import config_s4 as cf
+import config as cf
 
 import torchvision
 import torchvision.transforms as transforms

@@ -2,9 +2,10 @@ import os
 
 GPU = 1
 dataset = 'cifar10'
-feat_dim = 2048
-SEED = [1, 2, 3, 4, 5]
+DROP = ['0.5', '0']
+SEED = [4, 5, 6]
 
 for seed in SEED:
-    cmd = 'CUDA_VISIBLE_DEVICES=%d python train_eval_session8.py --seed %d --dataset %s --feat_dim %d' % (GPU, seed, dataset, feat_dim)
-    os.system(cmd)
+    for dp in DROP:
+        cmd = 'CUDA_VISIBLE_DEVICES=%d python train_eval_session9.py --seed %d --dataset %s --drop_p %s' % (GPU, seed, dataset, dp)
+        os.system(cmd)

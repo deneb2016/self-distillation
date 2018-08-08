@@ -16,24 +16,23 @@ import math
 from model.resnet import ResNet
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR')
-
 parser.add_argument('--bs', default=128, type=int, help='batch size')
 parser.add_argument('--num_epochs', default=300, type=int, help='number of epochs')
 parser.add_argument('--lr', default=0.1, type=float, help='learning_rate')
 parser.add_argument('--net', default='resnet34', type=str, help='model')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset = [cifar10/cifar100]')
-parser.add_argument('--stoch_depth', default=1, type=float, help='Stochastic depth; 1 means off (default=1)')
 
+parser.add_argument('--stoch_depth', default=0.5, type=float, help='Stochastic depth; 1 means off (default=1)')
 parser.add_argument('--distill_from', default=1, type=int, help='epoch to start distillation')
 parser.add_argument('--distill', type=float, default=0, metavar='M', help='factor of distill loss (default: 0.1, off if <=0)')
 parser.add_argument('--temp', type=float, default=1, metavar='M', help='temperature for distillation (default: 7)')
 
 # set training session
 parser.add_argument('--seed', help='pytorch random seed', default=1, type=int)
-parser.add_argument('--save_dir', help='directory to save models')
 
 
 args = parser.parse_args()
+save_dir = os.path.join('../repo/distill', args.dataset, 'resnet34', 'session3')
 best_acc = 0
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
@@ -43,11 +42,8 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
-if args.stoch_depth == 1:
-    model_name = '{}_{}_s3_without_sd_seed{}'.format(args.net, args.dataset, args.seed)
-else:
-    model_name = '{}_{}_s3_t{}_d{}_seed{}'.format(args.net, args.dataset, args.temp, args.distill, args.seed)
-log_file_name = os.path.join(args.save_dir, 'Log_{}.txt'.format(model_name))
+model_name = '{}_{}_s3_t{}_d{}_seed{}'.format(args.net, args.dataset, args.temp, args.distill, args.seed)
+log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
 
@@ -139,7 +135,7 @@ def test(net, dataloader, epoch):
     if acc > best_acc:
         print('| Saving Best model...\t\t\tTop1 = %.2f%%' %(acc))
         log_file.write('| Saving Best model...\t\t\tTop1 = %.2f%%\n' %(acc))
-        save_name = os.path.join(args.save_dir, '{}.pth'.format(model_name))
+        save_name = os.path.join(save_dir, '{}.pth'.format(model_name))
         checkpoint = dict()
         checkpoint['model'] = net.state_dict()
         checkpoint['model_name'] = model_name
@@ -206,7 +202,7 @@ if __name__ == '__main__':
     print('| Training Epochs = ' + str(args.num_epochs))
     print('| Initial Learning Rate = ' + str(args.lr))
 
-    optimizer = optim.SGD(net.parameters(), lr=cf.learning_rate(args.lr, 1), momentum=0.9, weight_decay=1e-4)
+    optimizer = optim.SGD(net.parameters(), lr=cf.learning_rate(args.lr, 1), momentum=0.9, weight_decay=args.wd)
 
     elapsed_time = 0
     for epoch in range(1, args.num_epochs + 1):

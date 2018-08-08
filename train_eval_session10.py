@@ -13,30 +13,32 @@ import time
 import argparse
 import numpy as np
 import math
-from model.vggnet import VGGNet
+from model.densenet import DenseNet3
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR')
 parser.add_argument('--bs', default=128, type=int, help='batch size')
 parser.add_argument('--num_epochs', default=300, type=int, help='number of epochs')
 parser.add_argument('--lr', default=0.1, type=float, help='learning_rate')
-parser.add_argument('--net', default='vgg16', type=str, help='model')
+parser.add_argument('--net', default='densenet', type=str, help='model')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset = [cifar10/cifar100]')
-
-parser.add_argument('--drop_p', default=0.5, type=float, help='dropout prob, off if 0')
-parser.add_argument('--feat_dim', default=2048, type=int, help='dimension of feature vector')
-parser.add_argument('--drop_last_only', action='store_true')
-parser.add_argument('--conv', default=5, type=int, help='number of conv layers, 4 or 5')
 
 parser.add_argument('--distill_from', default=1, type=int, help='epoch to start distillation')
 parser.add_argument('--distill', type=float, default=0, metavar='M', help='factor of distill loss (default: 0.1, off if <=0)')
 parser.add_argument('--temp', type=float, default=1, metavar='M', help='temperature for distillation (default: 7)')
+
+parser.add_argument('--layers', default=100, type=int, help='total number of layers (default: 100)')
+parser.add_argument('--growth', default=12, type=int, help='number of new channels per layer (default: 12)')
+parser.add_argument('--droprate', default=0, type=float, help='dropout probability (default: 0.0)')
+parser.add_argument('--reduce', default=0.5, type=float, help='compression rate in transition stage (default: 0.5)')
+parser.add_argument('--no-bottleneck', dest='bottleneck', action='store_false', help='To not use bottleneck block')
+parser.set_defaults(bottleneck=True)
 
 # set training session
 parser.add_argument('--seed', help='pytorch random seed', default=1, type=int)
 
 
 args = parser.parse_args()
-save_dir = os.path.join('../repo/distill', args.dataset, 'vgg16do', 'session6')
+save_dir = os.path.join('../repo/distill', args.dataset, 'densenet', 'session10')
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 best_acc = 0
@@ -49,7 +51,7 @@ else:
     device = torch.device('cpu')
 
 
-model_name = '{}_{}_s6_t{}_d{}_seed{}'.format(args.net, args.dataset, args.temp, args.distill, args.seed)
+model_name = '{}_{}_s10_dp{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.seed)
 log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
@@ -196,7 +198,7 @@ if __name__ == '__main__':
     print('\n[Phase 2] : Model setup')
     print('| Building net type [' + args.net + ']...')
     if args.net == 'vgg16':
-        net = VGGNet(num_classes, args.drop_p, args.drop_last_only, args.feat_dim, args.conv == 5)
+        net = VGGNet(num_classes, args.drop_p, False, args.feat_dim, args.conv == 5)
     else:
         print('Error : Network should be either [ResNet34]')
         sys.exit(0)
