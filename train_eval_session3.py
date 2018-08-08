@@ -32,7 +32,7 @@ parser.add_argument('--seed', help='pytorch random seed', default=1, type=int)
 
 
 args = parser.parse_args()
-save_dir = os.path.join('../repo/distill', args.dataset, 'resnet34', 'session3')
+save_dir = os.path.join('../repo/distill', args.dataset, 'resnet34sd', 'session3')
 best_acc = 0
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
