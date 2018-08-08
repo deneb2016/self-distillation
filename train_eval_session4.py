@@ -27,6 +27,7 @@ parser.add_argument('--drop_p', default=0, type=float, help='dropout prob, off i
 parser.add_argument('--feat_dim', default=4096, type=int, help='dimension of feature vector')
 parser.add_argument('--drop_last_only', action='store_true')
 parser.add_argument('--conv', default=5, type=int, help='number of conv layers, 4 or 5')
+parser.add_argument('--no_aug', action='store_true')
 
 parser.add_argument('--distill_from', default=1, type=int, help='epoch to start distillation')
 parser.add_argument('--distill', type=float, default=0, metavar='M', help='factor of distill loss (default: 0.1, off if <=0)')
@@ -47,7 +48,10 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
-model_name = '{}_{}_s4_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
+if args.no_aug:
+    model_name = '{}_{}_s4_no_aug_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
+else:
+    model_name = '{}_{}_s4_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
 log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
@@ -161,12 +165,18 @@ if __name__ == '__main__':
 
     # Data Uplaod
     print('\n[Phase 1] : Data Preparation')
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(cf.mean[args.dataset], cf.std[args.dataset]),
-    ])  # meanstd transformation
+    if args.no_aug:
+        transform_train = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(cf.mean[args.dataset], cf.std[args.dataset]),
+        ])  # meanstd transformation
+    else:
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(cf.mean[args.dataset], cf.std[args.dataset]),
+        ])  # meanstd transformation
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
