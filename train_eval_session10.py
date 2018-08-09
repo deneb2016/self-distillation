@@ -16,7 +16,7 @@ import math
 from model.densenet import DenseNet3
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR')
-parser.add_argument('--bs', default=128, type=int, help='batch size')
+parser.add_argument('--bs', default=64, type=int, help='batch size')
 parser.add_argument('--num_epochs', default=300, type=int, help='number of epochs')
 parser.add_argument('--lr', default=0.1, type=float, help='learning_rate')
 parser.add_argument('--wd', default=0.00001, type=float, help='weight decay')
