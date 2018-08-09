@@ -19,8 +19,10 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR')
 parser.add_argument('--bs', default=128, type=int, help='batch size')
 parser.add_argument('--num_epochs', default=300, type=int, help='number of epochs')
 parser.add_argument('--lr', default=0.1, type=float, help='learning_rate')
+parser.add_argument('--wd', default=0.00001, type=float, help='weight decay')
 parser.add_argument('--net', default='densenet', type=str, help='model')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset = [cifar10/cifar100]')
+parser.add_argument('--no_aug', action='store_true')
 
 parser.add_argument('--distill_from', default=1, type=int, help='epoch to start distillation')
 parser.add_argument('--distill', type=float, default=0, metavar='M', help='factor of distill loss (default: 0.1, off if <=0)')
@@ -28,7 +30,7 @@ parser.add_argument('--temp', type=float, default=1, metavar='M', help='temperat
 
 parser.add_argument('--layers', default=100, type=int, help='total number of layers (default: 100)')
 parser.add_argument('--growth', default=12, type=int, help='number of new channels per layer (default: 12)')
-parser.add_argument('--droprate', default=0, type=float, help='dropout probability (default: 0.0)')
+parser.add_argument('--drop_p', default=0.0, type=float, help='dropout probability (default: 0.0)')
 parser.add_argument('--reduce', default=0.5, type=float, help='compression rate in transition stage (default: 0.5)')
 parser.add_argument('--no-bottleneck', dest='bottleneck', action='store_false', help='To not use bottleneck block')
 parser.set_defaults(bottleneck=True)
@@ -50,8 +52,11 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
+if args.no_aug:
+    model_name = '{}_{}_s10_no_aug_dp{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.wd, args.seed)
+else:
+    model_name = '{}_{}_s10_dp{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.wd, args.seed)
 
-model_name = '{}_{}_s10_dp{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.seed)
 log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
@@ -165,12 +170,18 @@ if __name__ == '__main__':
 
     # Data Uplaod
     print('\n[Phase 1] : Data Preparation')
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(cf.mean[args.dataset], cf.std[args.dataset]),
-    ])  # meanstd transformation
+    if args.no_aug:
+        transform_train = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(cf.mean[args.dataset], cf.std[args.dataset]),
+        ])  # meanstd transformation
+    else:
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(cf.mean[args.dataset], cf.std[args.dataset]),
+        ])  # meanstd transformation
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
@@ -197,13 +208,12 @@ if __name__ == '__main__':
     # Model
     print('\n[Phase 2] : Model setup')
     print('| Building net type [' + args.net + ']...')
-    if args.net == 'vgg16':
-        net = VGGNet(num_classes, args.drop_p, False, args.feat_dim, args.conv == 5)
+    if args.net == 'densenet':
+        net = DenseNet3(args.layers, num_classes, args.growth, args.reduce, args.bottleneck, args.drop_p)
     else:
         print('Error : Network should be either [ResNet34]')
         sys.exit(0)
 
-    net.init_weights()
     net.to(device)
 
     # Training
@@ -211,7 +221,7 @@ if __name__ == '__main__':
     print('| Training Epochs = ' + str(args.num_epochs))
     print('| Initial Learning Rate = ' + str(args.lr))
 
-    optimizer = optim.SGD(net.parameters(), lr=cf.learning_rate(args.lr, 1), momentum=0.9, weight_decay=0)
+    optimizer = optim.SGD(net.parameters(), lr=cf.learning_rate(args.lr, 1), momentum=0.9, weight_decay=args.wd)
 
     elapsed_time = 0
     for epoch in range(1, args.num_epochs + 1):
