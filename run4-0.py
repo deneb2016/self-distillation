@@ -2,8 +2,8 @@ import os
 
 GPU = 0
 dataset = 'cifar100'
-SEED = [1, 2, 3, 4, 5]
-t = '9'
+SEED = [3, 5]
+t = '1'
 D = ['0.2', '0.04', '0.008']
 
 for seed in SEED:
