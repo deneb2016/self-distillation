@@ -2,11 +2,8 @@ import os
 
 GPU = 0
 dataset = 'cifar100'
-SEED = [2, 4]
-t = '1'
-D = ['0.2', '0.04', '0.008']
+seed = 1
+drop_p = '0.3'
 
-for seed in SEED:
-    for d in D:
-        cmd = 'CUDA_VISIBLE_DEVICES=%d python train_eval_session11.py --seed %d --dataset %s --temp %s --distill %s' % (GPU, seed, dataset, t, d)
-        os.system(cmd)
+cmd = 'CUDA_VISIBLE_DEVICES=%d python train_eval_session11.py --seed %d --dataset %s --drop_p %s --no_aug' % (GPU, seed, dataset, drop_p)
+os.system(cmd)
