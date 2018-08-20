@@ -49,9 +49,15 @@ else:
     device = torch.device('cpu')
 
 if args.no_aug:
-    model_name = '{}_{}_s4_no_aug_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
+    if args.drop_last_only:
+        model_name = '{}_{}_s4_no_aug_dl_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
+    else:
+        model_name = '{}_{}_s4_no_aug_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
 else:
-    model_name = '{}_{}_s4_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
+    if args.drop_last_only:
+        model_name = '{}_{}_s4_dl_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
+    else:
+        model_name = '{}_{}_s4_dp{}_fd{}_wd{}_seed{}'.format(args.net, args.dataset, args.drop_p, args.feat_dim, args.wd, args.seed)
 log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
