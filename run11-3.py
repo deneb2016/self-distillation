@@ -1,7 +1,7 @@
 import os
 
 GPU = 3
-dataset = 'cifar100'
+dataset = 'cifar10'
 SEED = [1, 2, 3]
 
 D = ['0.1', '0.02', '0.004']
