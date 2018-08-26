@@ -1,6 +1,6 @@
 import os
 
-GPU = 2
+GPU = 1
 dataset = 'cifar100'
 SEED = [1, 2, 3]
 
