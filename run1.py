@@ -1,7 +1,7 @@
 import os
 
 GPU = 0
-dataset = 'cifar100'
+dataset = 'cifar10'
 SEED = [1, 2, 3, 4, 5]
 
 for seed in SEED:
