@@ -71,7 +71,7 @@ def train(net, dataloader, optimizer, epoch, num_classes):
         targets = targets.to(device)
         # obtain soft_target by forwarding data in test mode
         if epoch >= args.distill_from and args.distill > 0:
-            soft_target = F.softmax(torch.randn(inputs.size(0), num_classes) * args.rand_std, dim=1)
+            soft_target = F.softmax(torch.randn(inputs.size(0), num_classes, device=device) * args.rand_std, dim=1)
 
         net.train()
         optimizer.zero_grad()
