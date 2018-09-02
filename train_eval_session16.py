@@ -22,18 +22,18 @@ parser.add_argument('--num_epochs', default=300, type=int, help='number of epoch
 parser.add_argument('--lr', default=0.1, type=float, help='learning_rate')
 parser.add_argument('--net', default='resnet34', type=str, help='model')
 parser.add_argument('--dataset', default='cifar10', type=str, help='dataset = [cifar10/cifar100]')
-parser.add_argument('--stoch_depth', default=1, type=float, help='Stochastic depth; 1 means off (default=1)')
+parser.add_argument('--stoch_depth', default=0.5, type=float, help='Stochastic depth; 1 means off (default=1)')
 
 parser.add_argument('--distill_from', default=1, type=int, help='epoch to start distillation')
-parser.add_argument('--distill', type=float, default=0, metavar='M', help='factor of distill loss (default: 0.1, off if <=0)')
-parser.add_argument('--temp', type=float, default=1, metavar='M', help='temperature for distillation (default: 7)')
+parser.add_argument('--distill', type=float, default=0, metavar='M',
+                    help='factor of distill loss (default: 0.1, off if <=0)')
+parser.add_argument('--rand_std', type=float, default=1)
 
 # set training session
 parser.add_argument('--seed', help='pytorch random seed', default=1, type=int)
 
-
 args = parser.parse_args()
-save_dir = os.path.join('../repo/distill', args.dataset, 'resnet34sd', 'session1')
+save_dir = os.path.join('../repo/distill', args.dataset, 'resnet34sd', 'session16')
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
@@ -47,15 +47,15 @@ else:
     device = torch.device('cpu')
 
 if args.stoch_depth == 1:
-    model_name = '{}_{}_s1_without_sd_seed{}'.format(args.net, args.dataset, args.seed)
+    model_name = '{}_{}_s16_no_sd_seed{}_d{}_std{}'.format(args.net, args.dataset, args.seed, args.distill, args.rand_std)
 else:
-    model_name = '{}_{}_s1_t{}_d{}_seed{}'.format(args.net, args.dataset, args.temp, args.distill, args.seed)
+    model_name = '{}_{}_s16_seed{}_d{}_std{}'.format(args.net, args.dataset, args.seed, args.distill, args.rand_std)
 log_file_name = os.path.join(args.save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
 
 # Training
-def train(net, dataloader, optimizer, epoch):
+def train(net, dataloader, optimizer, epoch, num_classes):
     criterion = nn.CrossEntropyLoss()
     net.train()
     hard_loss_sum = 0
@@ -64,36 +64,35 @@ def train(net, dataloader, optimizer, epoch):
     correct = 0
     total = 0
 
-    print('\n=> [%s] Training Epoch #%d, lr=%.4f' %(model_name, epoch, cf.learning_rate(args.lr, epoch)))
-    log_file.write('\n=> [%s] Training Epoch #%d, lr=%.4f\n' %(model_name, epoch, cf.learning_rate(args.lr, epoch)))
+    print('\n=> [%s] Training Epoch #%d, lr=%.4f' % (model_name, epoch, cf.learning_rate(args.lr, epoch)))
+    log_file.write('\n=> [%s] Training Epoch #%d, lr=%.4f\n' % (model_name, epoch, cf.learning_rate(args.lr, epoch)))
     for batch_idx, (inputs, targets) in enumerate(dataloader):
         inputs = inputs.to(device)
         targets = targets.to(device)
         # obtain soft_target by forwarding data in test mode
         if epoch >= args.distill_from and args.distill > 0:
-            with torch.no_grad():
-                net.eval()
-                soft_target = net(inputs)
+            soft_target = F.softmax(torch.randn(inputs.size(0), num_classes) * args.rand_std, dim=1)
 
         net.train()
         optimizer.zero_grad()
-        outputs = net(inputs)               # Forward Propagation
+        outputs = net(inputs)  # Forward Propagation
         loss = criterion(outputs, targets)  # Loss
         hard_loss_sum = hard_loss_sum + loss.item() * targets.size(0)
 
         # compute distillation loss
         if epoch >= args.distill_from and args.distill > 0:
-            heat_output = outputs / args.temp
-            heat_soft_target = soft_target / args.temp
+            heat_output = outputs
+            heat_soft_target = soft_target
 
-            distill_loss = F.kl_div(F.log_softmax(heat_output, 1), F.softmax(heat_soft_target), size_average=False) / targets.size(0)
+            distill_loss = F.kl_div(F.log_softmax(heat_output, 1), F.softmax(heat_soft_target),
+                                    size_average=False) / targets.size(0)
             soft_loss_sum = soft_loss_sum + distill_loss.item() * targets.size(0)
 
-            distill_loss = distill_loss * (args.temp*args.temp)
+            distill_loss = distill_loss
             loss = loss + args.distill * distill_loss
 
         loss.backward()  # Backward Propagation
-        optimizer.step() # Optimizer update
+        optimizer.step()  # Optimizer update
 
         loss_sum = loss_sum + loss.item() * targets.size(0)
         _, predicted = torch.max(outputs.detach(), 1)
@@ -107,11 +106,13 @@ def train(net, dataloader, optimizer, epoch):
 
         sys.stdout.write('\r')
         sys.stdout.write('| Epoch [%3d/%3d] Iter[%3d/%3d]\tLoss: %.4g Acc@1: %.2f%% Hard: %.4g Soft: %.4g'
-                %(epoch, args.num_epochs, batch_idx+1,
-                    (len(trainset)//args.bs)+1, loss_sum/total, 100.*correct/total, hard_loss_sum/total, soft_loss_sum/total))
+                         % (epoch, args.num_epochs, batch_idx + 1,
+                            (len(trainset) // args.bs) + 1, loss_sum / total, 100. * correct / total,
+                            hard_loss_sum / total, soft_loss_sum / total))
         sys.stdout.flush()
     log_file.write('| Epoch [%3d/%3d] \tLoss: %.4f Acc@1: %.2f%% Hard: %.4f Soft: %.4f'
-                     % (epoch, args.num_epochs, loss_sum/ total, 100. * correct / total, hard_loss_sum/total, soft_loss_sum/total))
+                   % (epoch, args.num_epochs, loss_sum / total, 100. * correct / total, hard_loss_sum / total,
+                      soft_loss_sum / total))
 
 
 def test(net, dataloader, epoch):
@@ -134,14 +135,14 @@ def test(net, dataloader, epoch):
             correct += predicted.eq(targets.data).long().sum().item()
 
     # Save checkpoint when best model
-    acc = 100.*correct/total
+    acc = 100. * correct / total
     test_loss = test_loss / total
-    print("\n| Validation Epoch #%d\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc))
-    log_file.write("\n| Validation Epoch #%d\tLoss: %.4f Acc@1: %.2f%%\n" %(epoch, test_loss, acc))
+    print("\n| Validation Epoch #%d\tLoss: %.4f Acc@1: %.2f%%" % (epoch, test_loss, acc))
+    log_file.write("\n| Validation Epoch #%d\tLoss: %.4f Acc@1: %.2f%%\n" % (epoch, test_loss, acc))
 
     if acc > best_acc:
-        print('| Saving Best model...\t\t\tTop1 = %.2f%%' %(acc))
-        log_file.write('| Saving Best model...\t\t\tTop1 = %.2f%%\n' %(acc))
+        print('| Saving Best model...\t\t\tTop1 = %.2f%%' % (acc))
+        log_file.write('| Saving Best model...\t\t\tTop1 = %.2f%%\n' % (acc))
         save_name = os.path.join(args.save_dir, '{}.pth'.format(model_name))
         checkpoint = dict()
         checkpoint['model'] = net.state_dict()
@@ -216,7 +217,6 @@ if __name__ == '__main__':
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.bs, shuffle=True, num_workers=2)
     testloader = torch.utils.data.DataLoader(testset, batch_size=args.bs, shuffle=False, num_workers=2)
 
-
     # Model
     print('\n[Phase 2] : Model setup')
     print('| Building net type [' + args.net + ']...')
@@ -240,15 +240,15 @@ if __name__ == '__main__':
     for epoch in range(1, args.num_epochs + 1):
         start_time = time.time()
         set_learning_rate(optimizer, cf.learning_rate(args.lr, epoch))
-        train(net, trainloader, optimizer, epoch)
+        train(net, trainloader, optimizer, epoch, num_classes)
         test(net, testloader, epoch)
 
         epoch_time = time.time() - start_time
         elapsed_time += epoch_time
-        print('| Elapsed time : %d:%02d:%02d' %(cf.get_hms(elapsed_time)))
-        log_file.write('| Elapsed time : %d:%02d:%02d\n' %(cf.get_hms(elapsed_time)))
+        print('| Elapsed time : %d:%02d:%02d' % (cf.get_hms(elapsed_time)))
+        log_file.write('| Elapsed time : %d:%02d:%02d\n' % (cf.get_hms(elapsed_time)))
         log_file.flush()
 
     print('\n[Phase 4] : Testing model')
-    print('* Test results : Acc@1 = %.2f%%' %(best_acc))
-    log_file.write('* Test results : Acc@1 = %.2f%%\n' %(best_acc))
+    print('* Test results : Acc@1 = %.2f%%' % (best_acc))
+    log_file.write('* Test results : Acc@1 = %.2f%%\n' % (best_acc))
