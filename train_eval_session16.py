@@ -50,7 +50,7 @@ if args.stoch_depth == 1:
     model_name = '{}_{}_s16_no_sd_seed{}_d{}_std{}'.format(args.net, args.dataset, args.seed, args.distill, args.rand_std)
 else:
     model_name = '{}_{}_s16_seed{}_d{}_std{}'.format(args.net, args.dataset, args.seed, args.distill, args.rand_std)
-log_file_name = os.path.join(args.save_dir, 'Log_{}.txt'.format(model_name))
+log_file_name = os.path.join(save_dir, 'Log_{}.txt'.format(model_name))
 log_file = open(log_file_name, 'w')
 
 
@@ -143,7 +143,7 @@ def test(net, dataloader, epoch):
     if acc > best_acc:
         print('| Saving Best model...\t\t\tTop1 = %.2f%%' % (acc))
         log_file.write('| Saving Best model...\t\t\tTop1 = %.2f%%\n' % (acc))
-        save_name = os.path.join(args.save_dir, '{}.pth'.format(model_name))
+        save_name = os.path.join(save_dir, '{}.pth'.format(model_name))
         checkpoint = dict()
         checkpoint['model'] = net.state_dict()
         checkpoint['model_name'] = model_name
