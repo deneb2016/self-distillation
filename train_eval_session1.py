@@ -1,3 +1,9 @@
+# --------------------------------------------------------
+# PyTorch self-distillation with stochastic regularization
+# Licensed under The MIT License [see LICENSE for details]
+# Written by Seungkwan Lee
+# Last modified date: 2018.12.4
+# --------------------------------------------------------
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -150,32 +156,6 @@ def test(net, dataloader, epoch):
         checkpoint['epoch'] = epoch
         torch.save(checkpoint, save_name)
         best_acc = acc
-
-
-# def test_trainset(net, dataloader, epoch):
-#     criterion = nn.CrossEntropyLoss()
-#     net.eval()
-#     test_loss = 0
-#     correct = 0
-#     total = 0
-#     with torch.no_grad():
-#         for batch_idx, (inputs, targets) in enumerate(dataloader):
-#             inputs = inputs.to(device)
-#             targets = targets.to(device)
-#             outputs = net(inputs)
-#             loss = criterion(outputs, targets)
-#
-#             test_loss += loss.item() * targets.size(0)
-#             _, predicted = torch.max(outputs.data, 1)
-#             total += targets.size(0)
-#             correct += predicted.eq(targets.data).long().sum().item()
-#
-#     # Save checkpoint when best model
-#     acc = 100.*correct/total
-#     test_loss = test_loss / total
-#     print("\n| Evaluation Trainset Epoch #%d\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc), end='')
-#     log_file.write("\n| Evaluation Trainset Epoch #%d\t\tLoss: %.4f Acc@1: %.2f%%" %(epoch, test_loss, acc))
-
 
 def set_learning_rate(optimizer, lr):
     for param_group in optimizer.param_groups:

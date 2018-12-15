@@ -1,3 +1,9 @@
+# --------------------------------------------------------
+# PyTorch self-distillation with stochastic regularization
+# Licensed under The MIT License [see LICENSE for details]
+# Written by Seungkwan Lee
+# Last modified date: 2018.12.4
+# --------------------------------------------------------
 import torch
 import torch.nn as nn
 import torch.optim as optim
